@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="620" viewBox="0 0 420 620">
+  <rect width="420" height="620" fill="#f7f7f5"/>
+  <rect x="16" y="16" width="388" height="588" rx="5" fill="none" stroke="#111" stroke-width="5"/>
+  <path d="M16 368 L105 278 L168 330 L252 206 L404 368 V604 H16 Z" fill="#b8b8b5"/>
+  <path d="M16 430 L118 345 L184 405 L276 290 L404 405 V604 H16 Z" fill="#5e5e5c"/>
+  <circle cx="324" cy="126" r="46" fill="#d4d4d1" stroke="#111" stroke-width="4"/>
+  <text x="210" y="82" text-anchor="middle" font-family="sans-serif" font-size="23" letter-spacing="4" fill="#111">РОМАН СУРЖИКОВ</text>
+  <text x="210" y="164" text-anchor="middle" font-family="sans-serif" font-size="38" font-weight="700" fill="#111">БЕЗ ПОМОЩИ</text>
+  <text x="210" y="208" text-anchor="middle" font-family="sans-serif" font-size="38" font-weight="700" fill="#111">ВАШЕЙ</text>
+</svg>

@@ -1,0 +1,16 @@
+require("setupkoenv")
+require("apps/bokopds/subprocess_guard").install()
+
+local ffiutil = require("ffi/util")
+local marker = assert(os.getenv("BOKOPDS_GUARD_MARKER"))
+local pid_file = assert(os.getenv("BOKOPDS_GUARD_PID_FILE"))
+local pid = assert(ffiutil.runInSubProcess(function()
+    ffiutil.sleep(3)
+    local file = assert(io.open(marker, "w"))
+    file:write("orphan survived\n")
+    file:close()
+end, false))
+local output = assert(io.open(pid_file, "w"))
+output:write(pid, "\n")
+output:close()
+while true do ffiutil.sleep(1) end

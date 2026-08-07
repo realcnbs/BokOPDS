@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opds="http://opds-spec.org/2010/catalog">
+  <id>urn:test:root</id>
+  <title>Test Library</title>
+  <updated>2026-08-05T12:00:00Z</updated>
+  <link rel="self" href="/opds/root" type="application/atom+xml;profile=opds-catalog"/>
+  <link rel="next" href="/opds/page/2" type="application/atom+xml;profile=opds-catalog"/>
+  <link rel="search" href="/opds/search?q={searchTerms}" type="application/atom+xml"/>
+  <entry>
+    <id>urn:test:section</id>
+    <title>Newest books</title>
+    <content type="text">Browse recent additions</content>
+    <link rel="subsection" href="/opds/new" type="application/atom+xml;profile=opds-catalog"/>
+  </entry>
+  <entry>
+    <id>urn:test:book:1</id>
+    <title>A Test Book</title>
+    <author><name>Alex Author</name></author>
+    <summary type="text">A concise description.</summary>
+    <updated>2026-08-05T11:00:00Z</updated>
+    <link rel="http://opds-spec.org/image" href="/covers/1.jpg" type="image/jpeg"/>
+    <link rel="http://opds-spec.org/acquisition/open-access" href="/books/1.epub" type="application/epub+zip"/>
+    <link rel="http://opds-spec.org/acquisition/open-access" href="/books/1.pdf" type="application/pdf"/>
+  </entry>
+</feed>
