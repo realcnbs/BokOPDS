@@ -7,6 +7,13 @@ local CatalogService = {}
 
 local CATALOG_TYPE = "application/atom%+xml"
 local ACQUISITION_REL = "^http://opds%-spec%.org/acquisition"
+local CATALOG_RELS = {
+    ["subsection"] = true,
+    ["http://opds-spec.org/subsection"] = true,
+    ["http://opds-spec.org/crawlable"] = true,
+    ["http://opds-spec.org/sort/popular"] = true,
+    ["http://opds-spec.org/sort/new"] = true,
+}
 local MAX_COVER_PIXELS = 2 * 1000 * 1000
 local MAX_COVER_DIMENSION = 4096
 local COVER_PART_SUFFIX = ".bokopds-cover.part"
@@ -153,6 +160,14 @@ local function hasRelation(value, expected)
     return false
 end
 
+local function hasCatalogRelation(value)
+    if value == nil or value == "" then return true end
+    for _, relation in ipairs(relations(value)) do
+        if CATALOG_RELS[relation] then return true end
+    end
+    return false
+end
+
 local function absolute(base, href)
     if not href or href == "" then return nil end
     return socket_url.absolute(base, href)
@@ -166,9 +181,43 @@ local function authorName(author)
     return ""
 end
 
+local function plainText(primary, fallback)
+    local value = type(primary) == "string" and primary or
+        (type(fallback) == "string" and fallback or "")
+    return util.htmlToPlainTextIfHtml(value)
+end
+
 local function numberValue(value)
     local number = tonumber(value)
     if number and number >= 0 then return number end
+end
+
+local function searchTemplate(value, source_url)
+    local template = tostring(value or "")
+    if template == "" then return nil end
+    if source_url then
+        local prefix, expression = template:match("^(.-)(%b{})$")
+        if prefix then
+            template = absolute(source_url, prefix) .. expression
+        else
+            template = absolute(source_url, template)
+        end
+    end
+    template = template:gsub("{searchTerms}", "%%s")
+    template = template:gsub("{([?&])([^}]+)}", function(operator, variables)
+        local selected
+        for variable in variables:gmatch("[^,]+") do
+            if variable == "searchTerms" or variable == "query" or variable == "q" then
+                selected = variable
+                break
+            end
+        end
+        if selected then
+            return operator .. selected .. "=%s"
+        end
+        return ""
+    end)
+    return template:find("%s", 1, true) and template or nil
 end
 
 local function languageList(value)
@@ -244,18 +293,18 @@ local function parseAtom(document, source_url)
         local item = {
             title = type(entry.title) == "string" and entry.title or "Untitled",
             author = authorName(entry.author),
-            summary = util.htmlToPlainTextIfHtml(entry.content or entry.summary or ""),
+            summary = plainText(entry.content, entry.summary),
             acquisitions = {},
             related = {},
-            languages = languageList(entry["dc:language"] or entry.language),
+            languages = languageList(entry["dc:language"] or
+                entry["dcterms:language"] or entry.language),
         }
         item.language = item.languages[1]
         for _, link in ipairs(list(entry.link)) do
             local href = absolute(source_url, link.href)
             local rel = link.rel or ""
             local media_type = link.type or ""
-            if href and media_type:find(CATALOG_TYPE) and
-                    (rel == "" or rel == "subsection" or rel:find("subsection", 1, true)) then
+            if href and media_type:find(CATALOG_TYPE) and hasCatalogRelation(rel) then
                 item.url = href
             elseif href and rel:match(ACQUISITION_REL) then
                 table.insert(item.acquisitions, {
@@ -316,6 +365,30 @@ local function parseAtom(document, source_url)
 end
 
 local function parseJSON(document, source_url)
+    if document.metadata ~= nil and type(document.metadata) ~= "table" then
+        error("invalid OPDS metadata")
+    end
+    if document.links ~= nil and type(document.links) ~= "table" then
+        error("invalid OPDS links")
+    end
+    for _, link in ipairs(list(document.links)) do
+        if type(link) ~= "table" or type(link.href) ~= "string" or link.href == "" then
+            error("invalid OPDS link")
+        end
+    end
+    for _, collection_name in ipairs({ "navigation", "publications" }) do
+        local collection = document[collection_name]
+        if collection ~= nil and type(collection) ~= "table" then
+            error("invalid OPDS collection")
+        end
+        for _, entry in ipairs(list(collection)) do
+            if type(entry) ~= "table" or
+                    (entry.metadata ~= nil and type(entry.metadata) ~= "table") or
+                    (entry.links ~= nil and type(entry.links) ~= "table") then
+                error("invalid OPDS entry")
+            end
+        end
+    end
     local result = {
         title = document.metadata and document.metadata.title or "Catalog",
         source_url = source_url,
@@ -336,11 +409,10 @@ local function parseJSON(document, source_url)
         if hasRelation(rel, "up") then result.up_url = absolute(source_url, link.href) end
         if hasRelation(rel, "start") then result.start_url = absolute(source_url, link.href) end
         if hasRelation(rel, "search") then
-            local href = absolute(source_url, link.href)
             if (link.type or ""):lower():find("application/opensearchdescription+xml", 1, true) then
-                result.search_descriptor_url = href
+                result.search_descriptor_url = absolute(source_url, link.href)
             else
-                result.search_url = href:gsub("{searchTerms}", "%%s")
+                result.search_url = searchTemplate(link.href, source_url)
             end
         end
     end
@@ -363,11 +435,14 @@ local function parseJSON(document, source_url)
             local item = {
                 title = metadata.title or entry.title or "Untitled",
                 author = "",
-                summary = util.htmlToPlainTextIfHtml(metadata.description or ""),
+                summary = plainText(metadata.description),
                 acquisitions = {},
                 publication = publication,
                 languages = languageList(metadata.language),
             }
+            if not publication and entry.href then
+                item.url = absolute(source_url, entry.href)
+            end
             item.language = item.languages[1]
             local author = metadata.author
             if type(author) == "table" then
@@ -384,9 +459,11 @@ local function parseJSON(document, source_url)
             for _, link in ipairs(list(entry.links)) do
                 local rel = type(link.rel) == "table" and link.rel[1] or link.rel or ""
                 local href = absolute(source_url, link.href)
-                if href and publication and (rel == "http://opds-spec.org/acquisition" or
-                        rel == "http://opds-spec.org/acquisition/open-access" or
-                        rel == "download" or rel == "publication") then
+                if href and publication and
+                        (hasRelation(link.rel, "http://opds-spec.org/acquisition") or
+                        hasRelation(link.rel, "http://opds-spec.org/acquisition/open-access") or
+                        hasRelation(link.rel, "download") or
+                        hasRelation(link.rel, "publication")) then
                     table.insert(item.acquisitions, {
                         href = href,
                         type = link.type,

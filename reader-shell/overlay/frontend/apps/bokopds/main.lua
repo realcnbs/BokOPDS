@@ -13,6 +13,19 @@ function BokOPDS:show()
     local catalogs = settings:readSetting("catalogs", {})
     local bookmarks = settings:readSetting("bookmarks", {})
 
+    local capture_url = os.getenv("BOKOPDS_CAPTURE_CATALOG_URL")
+    if capture_url then
+        catalogs = {{
+            id = "public-catalog-capture",
+            title = os.getenv("BOKOPDS_CAPTURE_CATALOG_TITLE") or "Public catalog",
+            url = capture_url,
+            username = "",
+            password = "",
+            download_directory = DataStorage:getDataDir() .. "/downloads",
+        }}
+        bookmarks = {}
+    end
+
     if os.getenv("BOKOPDS_DEMO") == "library" then
         catalogs = {
             {
@@ -58,6 +71,90 @@ function BokOPDS:show()
         shell:addService(AutoSuspend:new{ ui = shell })
     end
     UIManager:show(shell, "full")
+
+    local capture_screenshot = os.getenv("BOKOPDS_CAPTURE_SCREENSHOT")
+    if capture_screenshot then
+        local capture_screen = os.getenv("BOKOPDS_CAPTURE_SCREEN") or "home"
+        local function capture()
+            UIManager:forceRePaint()
+            Device.screen:shot(capture_screenshot)
+            UIManager:scheduleIn(0.1, function() UIManager:quit(0) end)
+        end
+        local function waitFor(predicate, callback, attempts)
+            attempts = attempts or 0
+            if predicate() then
+                callback()
+            elseif attempts >= 150 then
+                error("timed out preparing public catalog screenshot: " ..
+                    tostring(shell.status or shell.offline_reason or "no status"))
+            else
+                UIManager:scheduleIn(0.2, function()
+                    waitFor(predicate, callback, attempts + 1)
+                end)
+            end
+        end
+        local function finishPublicationFeed()
+            if capture_screen == "selection" then
+                shell:activate("selection-start")
+                shell:activate("selection-page")
+                capture()
+                return
+            end
+            local publication_index
+            for index, entry in ipairs((shell.current_feed or {}).entries or {}) do
+                if entry.publication then publication_index = index; break end
+            end
+            assert(publication_index, "public catalog has no publication entry")
+            shell:activate("entry:" .. publication_index)
+            waitFor(function()
+                return not shell.busy and shell.screen == "detail"
+            end, capture)
+        end
+        local function openPublicationFeed()
+            local root_url = shell.current_feed and shell.current_feed.source_url
+            local publication_url = os.getenv("BOKOPDS_CAPTURE_PUBLICATION_URL")
+            if publication_url then
+                shell:loadFeed(publication_url, shell.current_catalog,
+                    os.getenv("BOKOPDS_CAPTURE_PUBLICATION_TITLE") or "Books",
+                    false, false, "child")
+                waitFor(function()
+                    return not shell.busy and shell.current_feed and
+                        shell.current_feed.source_url ~= root_url
+                end, finishPublicationFeed)
+                return
+            end
+            local navigation_index
+            for index, entry in ipairs((shell.current_feed or {}).entries or {}) do
+                if not entry.publication and entry.url then
+                    navigation_index = index
+                    break
+                end
+            end
+            assert(navigation_index, "public catalog has no navigation entry")
+            shell:activate("entry:" .. navigation_index)
+            waitFor(function()
+                return not shell.busy and shell.current_feed and
+                    shell.current_feed.source_url ~= root_url
+            end, finishPublicationFeed)
+        end
+        UIManager:scheduleIn(0.1, function()
+            if capture_screen == "home" then
+                capture()
+                return
+            end
+            shell:activate("open:1")
+            waitFor(function()
+                return not shell.busy and shell.screen == "feed" and shell.current_feed
+            end, function()
+                if capture_screen == "feed" then
+                    capture()
+                else
+                    openPublicationFeed()
+                end
+            end)
+        end)
+        return
+    end
 
     local demo_screen = os.getenv("BOKOPDS_DEMO_SCREEN")
     if demo_screen then

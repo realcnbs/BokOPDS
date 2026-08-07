@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import base64
 import http.server
 import pathlib
 import ssl
@@ -9,8 +10,43 @@ import time
 class Handler(http.server.SimpleHTTPRequestHandler):
     cover_path = None
     redirect_url = None
+    protected_username = "catalog-user"
+    protected_password = "catalog-password"
+
+    def protected_response(self):
+        expected = "Basic " + base64.b64encode(
+            f"{self.protected_username}:{self.protected_password}".encode()
+        ).decode()
+        supplied = self.headers.get("Authorization")
+        if supplied == expected:
+            return True
+        self.send_response(401 if supplied is None else 403)
+        self.send_header("WWW-Authenticate", 'Basic realm="BokOPDS test catalog"')
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+        return False
 
     def do_GET(self):
+        if self.path == "/protected.xml":
+            if not self.protected_response():
+                return
+            payload = (pathlib.Path(self.directory) / "root.xml").read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/atom+xml")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+        if self.path == "/protected-book.epub":
+            if not self.protected_response():
+                return
+            payload = (pathlib.Path(self.directory) / "books" / "1.epub").read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/epub+zip")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
         if self.path == "/auth-check":
             payload = self.headers.get("Authorization", "none").encode()
             self.send_response(200)

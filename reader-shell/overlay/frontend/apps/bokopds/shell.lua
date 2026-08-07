@@ -3330,8 +3330,8 @@ function Shell:runSelfTest(report_path)
     self.input_fields[1]:setText("Self-test library")
     self.input_fields[1]:goToEnd()
     self.input_fields[2]:setText("  http://127.0.0.1:18080/root.xml  ")
-    self.input_fields[3]:setText("")
-    self.input_fields[4]:setText("")
+    self.input_fields[3]:setText("  catalog-user  ")
+    self.input_fields[4]:setText("catalog-password")
     self.input_fields[5]:setText(require("datastorage"):getDataDir() .. "/self-test-downloads")
     -- The self-test mutates the field before the event loop has painted this
     -- form, so seed the coordinates normally recorded by paintInput().
@@ -3348,6 +3348,13 @@ function Shell:runSelfTest(report_path)
     local saved = self.catalogs[#self.catalogs]
     assert(saved.title == "Self-test library", "Unicode input/backspace failed")
     assert(saved.url == "http://127.0.0.1:18080/root.xml", "URL whitespace was not normalized")
+    assert(saved.username == "catalog-user" and saved.password == "catalog-password",
+        "catalog credentials were not saved from the form")
+    local persisted_catalogs = self.settings:readSetting("catalogs", {})
+    local persisted = persisted_catalogs[#persisted_catalogs]
+    assert(persisted and persisted.username == "catalog-user" and
+        persisted.password == "catalog-password",
+        "catalog credentials were not persisted")
     local repeated_parents = {
         { title = "Library root", url = "https://example.invalid/opds" },
         { title = "Authors index", url = "https://example.invalid/opds/authors" },

@@ -59,6 +59,41 @@ local same_origin = CatalogService.fetchTask(auth_base_url .. "/auth-check",
 assert(same_origin.ok and same_origin.body ==
     "Basic " .. mime.b64("user%25:password%2Fvalue"),
     "catalog credentials were changed before same-origin Basic authentication")
+
+-- Exercise the complete Basic-auth catalog flow, not only header construction.
+local auth_missing = CatalogService.fetchTask(
+    auth_base_url .. "/protected.xml", "", "", auth_base_url)()
+assert(not auth_missing.ok and auth_missing.code == 401,
+    "protected catalog accepted a request without credentials")
+local auth_rejected = CatalogService.fetchTask(auth_base_url .. "/protected.xml",
+    "catalog-user", "wrong-password", auth_base_url)()
+assert(not auth_rejected.ok and auth_rejected.code == 403,
+    "protected catalog accepted incorrect credentials")
+local auth_catalog = CatalogService.fetchTask(auth_base_url .. "/protected.xml",
+    "catalog-user", "catalog-password", auth_base_url)()
+assert(auth_catalog.ok, "valid catalog credentials were rejected")
+local protected_feed, protected_parse_error = CatalogService.parse(
+    auth_catalog.body, auth_base_url .. "/protected.xml")
+assert(protected_feed and #protected_feed.entries == 2, protected_parse_error)
+local protected_download = CatalogService.downloadTask({
+    href = auth_base_url .. "/protected-book.epub",
+    type = "application/epub+zip",
+    book_author = "Authenticated Author",
+    book_title = "Authenticated Book",
+}, download_dir, "catalog-user", "catalog-password", auth_base_url)()
+assert(protected_download.ok and
+    lfs.attributes(protected_download.path, "mode") == "file",
+    "authenticated acquisition download failed")
+local rejected_download = CatalogService.downloadTask({
+    href = auth_base_url .. "/protected-book.epub",
+    type = "application/epub+zip",
+    book_author = "Rejected Author",
+    book_title = "Rejected Book",
+}, download_dir, "catalog-user", "wrong-password", auth_base_url)()
+assert(not rejected_download.ok and
+    not lfs.attributes(download_dir .. "/Rejected Author - Rejected Book.epub", "mode") and
+    not lfs.attributes(download_dir .. "/Rejected Author - Rejected Book.epub.bokopds.part", "mode"),
+    "failed authenticated download left a book or partial file")
 local redirected = CatalogService.fetchTask(base_url .. "/redirect",
     "secret-user", "secret-password", base_url)()
 assert(redirected.ok and redirected.body == "none",
@@ -95,6 +130,38 @@ assert(#feed.entries[2].acquisitions == 2, "acquisitions were not parsed")
 assert(feed.search_url == base_url .. "/opds/search?q=%s", "search template was not parsed")
 assert(feed.next_url == base_url .. "/opds/page/2", "pagination link was not parsed")
 
+local sorted_catalog, sorted_catalog_error = CatalogService.parse([[
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Sorted catalog navigation</title>
+  <entry><title>Popular books</title>
+    <link rel="http://opds-spec.org/sort/popular" href="/popular.atom"
+          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+  </entry>
+  <entry><title>New books</title>
+    <link rel="http://opds-spec.org/sort/new" href="/new.atom"
+          type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+  </entry>
+</feed>]], base_url .. "/sorted.xml")
+assert(sorted_catalog, sorted_catalog_error)
+assert(sorted_catalog.entries[1].url == base_url .. "/popular.atom" and
+    sorted_catalog.entries[2].url == base_url .. "/new.atom",
+    "OPDS sort navigation relations were not parsed as catalog links")
+
+local empty_content_feed, empty_content_error = CatalogService.parse([[
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:dcterms="http://purl.org/dc/terms/">
+  <title>Empty content fallback</title>
+  <entry><title>La Metamorfosis</title><content type="text"></content>
+    <summary>Fallback summary</summary><dcterms:language>es</dcterms:language>
+    <link rel="http://opds-spec.org/acquisition" href="/book.epub"
+          type="application/epub+zip"/>
+  </entry>
+</feed>]], base_url .. "/empty-content.xml")
+assert(empty_content_feed, empty_content_error)
+assert(empty_content_feed.entries[1].summary == "Fallback summary" and
+    empty_content_feed.entries[1].language == "es",
+    "empty Atom content did not fall back to summary or dcterms language")
+
 local metadata_feed, metadata_error = CatalogService.parse([[
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:dc="http://purl.org/dc/terms/"
@@ -126,6 +193,30 @@ local json_metadata, json_metadata_error = CatalogService.parse([[
 assert(json_metadata, json_metadata_error)
 assert(json_metadata.total_items == 21 and json_metadata.entries[1].language == "uk",
     "OPDS 2 paging or language metadata was not parsed")
+
+local json_navigation, json_navigation_error = CatalogService.parse([[
+{
+  "metadata": {"title":"OPDS 2 navigation"},
+  "links": [{
+    "rel":["search"],
+    "href":"/all{?query,per-page,page}",
+    "type":"application/opds+json",
+    "templated":true
+  }],
+  "navigation": [{
+    "title":"Newest books",
+    "href":"/new-releases",
+    "rel":["http://opds-spec.org/sort/new"],
+    "type":"application/opds+json"
+  }]
+}
+]], base_url .. "/opds2/root.json")
+assert(json_navigation, json_navigation_error)
+assert(json_navigation.entries[1].url == base_url .. "/new-releases",
+    "direct OPDS 2 navigation URL was not parsed")
+assert(json_navigation.search_url == base_url .. "/all?query=%s",
+    "OPDS 2 query URI template was not normalized for search: " ..
+        tostring(json_navigation.search_url))
 
 for _, invalid_json in ipairs({
     [[{"metadata":1}]],

@@ -4,10 +4,22 @@ BokOPDS is a focused OPDS catalog client for Kobo e-readers. It adds a BokOPDS
 item to the stock home navigation and opens directly into catalog browsing.
 There is no separate KOReader or NickelMenu installation to manage.
 
+[Project page](https://realcnbs.github.io/BokOPDS/) ·
+[Latest release](https://github.com/realcnbs/BokOPDS/releases/latest) ·
+[Compatibility table](COMPATIBILITY.md)
+
 The interface is intentionally limited to OPDS: browse and search catalogs,
 bookmark catalog locations, filter by preferred publication language, inspect
 book metadata, and download one or several books. Completed downloads request
 a stock-library rescan.
+
+<p align="center">
+  <img src="docs/assets/screenshots/selection.png" width="420"
+       alt="BokOPDS selecting books from the public textos.info OPDS catalog">
+</p>
+
+The screenshots use live public catalog data rather than fixtures. More views
+are available on the [project page](https://realcnbs.github.io/BokOPDS/#screens).
 
 > **Compatibility:** one universal package is used for every allowlisted
 > target, but that does not mean every Kobo model is supported. The hook stays
@@ -86,9 +98,22 @@ Then run:
 ```
 
 The test suite downloads the pinned desktop runtime, exercises OPDS parsing,
-TLS trust and hostname failures, cross-origin authentication, downloads,
-cancellation, responsive layouts and screenshot smoke tests. Device behavior
-which depends on the stock UI still requires the exact supported reader.
+TLS trust and hostname failures, successful and rejected Basic authentication,
+credential isolation, authenticated downloads, cancellation, responsive layouts
+and screenshot smoke tests. Device behavior which depends on the stock UI still
+requires the exact supported reader.
+
+The public catalogs bundled with the pinned KOReader release can also be checked
+against their live services:
+
+```sh
+./scripts/test-live-catalogs.sh
+```
+
+This reports upstream outages and access restrictions separately from feeds
+that respond but fail BokOPDS parsing. Set `BOKOPDS_LIVE_STRICT=1` to also treat
+an unavailable service as a test failure. Live checks are opt-in so the normal
+suite remains deterministic and works offline.
 
 ## Build a local device package
 

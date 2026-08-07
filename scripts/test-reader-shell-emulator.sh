@@ -206,3 +206,7 @@ for dimensions in 600x800 1072x1448 1404x1872; do
 done
 
 echo "reader-shell-emulator-tests: ok"
+
+if [ "${BOKOPDS_LIVE_TESTS:-0}" = "1" ]; then
+    "${project_dir}/scripts/test-live-catalogs.sh"
+fi
