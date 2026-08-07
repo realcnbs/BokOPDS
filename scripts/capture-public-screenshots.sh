@@ -5,8 +5,8 @@ project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 output_dir=${1:-"${project_dir}/docs/assets/screenshots"}
 runtime_dir="${project_dir}/build/reader-shell-emulator"
 profile_root=$(mktemp -d "${project_dir}/build/.public-screenshots.XXXXXX")
-catalog_url='https://www.textos.info/catalogo.atom'
-publication_url='https://www.textos.info/populares.atom'
+catalog_url='https://www.gutenberg.org/ebooks.opds/?format=opds'
+publication_url='https://www.gutenberg.org/ebooks/1342.opds'
 
 cleanup() {
     rm -rf -- "${profile_root}"
@@ -24,9 +24,9 @@ for screen in home feed selection detail; do
     BOKOPDS_EMULATOR_PROFILE="${profile}" \
     BOKOPDS_VIDEO_DRIVER=x11 \
     BOKOPDS_CAPTURE_CATALOG_URL="${catalog_url}" \
-    BOKOPDS_CAPTURE_CATALOG_TITLE='textos.info' \
+    BOKOPDS_CAPTURE_CATALOG_TITLE='Project Gutenberg' \
     BOKOPDS_CAPTURE_PUBLICATION_URL="${publication_url}" \
-    BOKOPDS_CAPTURE_PUBLICATION_TITLE='Textos más populares' \
+    BOKOPDS_CAPTURE_PUBLICATION_TITLE='Pride and Prejudice' \
     BOKOPDS_CAPTURE_SCREEN="${screen}" \
     BOKOPDS_CAPTURE_SCREENSHOT="${output_dir}/${screen}.png" \
     SSL_CERT_FILE="${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}" \
@@ -38,4 +38,4 @@ for screen in home feed selection detail; do
     fi
 done
 
-echo "Captured public textos.info catalog screens in ${output_dir}"
+echo "Captured public Project Gutenberg catalog screens in ${output_dir}"

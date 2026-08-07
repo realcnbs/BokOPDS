@@ -1,63 +1,80 @@
 # Architecture
 
-## Runtime layers
+This document explains how BokOPDS is put together. For build commands, see
+[DEVELOPING.md](../DEVELOPING.md).
 
-`device-hook` is a small C++/Qt NickelHook module loaded by the stock interface.
-Generated data gives it an allowlist of exact hardware/firmware targets and
-their private `MainNavButton` ABI. All listed symbols are resolved optionally.
-The hook reads `.kobo/version`, selects one exact enabled target, verifies every
-required symbol, and only then constructs the menu item. Unknown combinations
-remain inert. The hook launches `device-runtime/launch.sh` and calls the stock
-library workflow when a completed-download marker is pending.
+## The three parts
 
-`device-runtime/launch.sh` owns the single-instance lock and persistent runtime
-directory. It launches the bundled reader runtime, preserves logs, constrains
-the default publication directory to `/mnt/onboard/BokOPDS`, provides the CA
-bundle path, and keeps the lock until the runtime exits.
+### BokOPDS application
 
-`reader-shell/overlay` is the BokOPDS application. `shell.lua` owns navigation,
-rendering and persisted user state. `catalog_service.lua` parses OPDS and
-performs feed, cover and acquisition tasks. `secure_http.lua` validates URLs,
-authenticates TLS peers and hostnames, binds credentials to the configured
-catalog origin, handles redirects explicitly, and enforces response limits.
-`subprocess_guard.lua` makes network workers die with a crashed parent.
+The Lua application lives in
+`reader-shell/overlay/frontend/apps/bokopds`.
 
-The rest of the device tree is assembled from the exact KOReader release in
-`reader-shell/runtime.lock`. BokOPDS uses its renderer, fonts, shaping,
-keyboard, event loop, network manager, task wrapper, suspend and USB services.
+- `shell.lua` draws the interface, handles navigation, and saves user settings.
+- `catalog_service.lua` reads OPDS feeds, covers, and download links.
+- `secure_http.lua` handles HTTPS, authentication, redirects, and response
+  limits.
+- `subprocess_guard.lua` stops network workers if the main app crashes.
 
-## Security boundaries
+### Reader runtime
 
-- Remote traffic must use HTTPS. Plain HTTP is accepted only on loopback for
-  deterministic emulator tests.
-- Basic credentials are sent only to the configured scheme/host/effective-port
-  origin and are recomputed after each redirect.
-- The packaged Mozilla CA bundle validates the chain; BokOPDS separately checks
-  DNS/IP subject alternative names.
-- Device downloads are constrained under `BOKOPDS_LIBRARY_ROOT` and hidden or
-  parent-directory paths are rejected.
-- Feed and decoded/disk cover caches are bounded and scoped by catalog account.
-- Packages reject traversal, links, special files, obsolete payloads and
-  non-ARM runtime ELFs.
-- The firmware hook activates only for an exact generated target because it
-  uses a private C++ ABI. Runtime model recognition alone is insufficient.
+BokOPDS uses a trimmed, pinned KOReader runtime for text rendering, fonts,
+keyboard input, touch events, networking, sleep, and USB handling. The version
+and download checksums are recorded in `reader-shell/runtime.lock`.
 
-## Persistence
+`device-runtime/launch.sh` starts one copy of BokOPDS, keeps its logs and state
+in the application directory, and sets `/mnt/onboard/BokOPDS` as the default
+books folder.
 
-Catalogs, Basic-auth credentials, bookmarks, language preferences and bounded
-feed-cache records are stored in the application state directory on the
-reader. They are not encrypted at rest. Anyone with USB/storage access can read
-them. Deleting a catalog purges its feed cache and bookmarks; Clear cache
-removes feed and cover data.
+### Home-screen integration
 
-Downloads use a `.part` file and atomic rename. Cancellation and startup sweep
-BokOPDS-owned partial files. A successful download appends its path to
-`library-refresh.pending`; the hook consumes that marker only after the runtime
-lock disappears.
+`device-hook` is a small C++/Qt extension loaded by NickelHook. It adds the
+BokOPDS item to the standard home navigation, starts the app, and asks the
+built-in library to scan newly downloaded books after BokOPDS closes.
 
-## Package build
+The extension is enabled only for model and firmware combinations listed in
+the compatibility data. The technical profile includes the symbols and class
+layout required by that firmware. If the profile does not match, the extension
+does nothing.
 
-`assemble-reader-shell-device.sh` verifies and overlays the pinned runtime.
-`build-release.sh` builds the hook and runtime package, verifies the archive,
-and writes SHA-256 checksums. The archive is rooted only at the application
-directory and the one NickelHook library path.
+## What happens when BokOPDS opens
+
+1. The home-screen extension checks the reader and firmware.
+2. The launcher prevents a second BokOPDS process from starting.
+3. The Lua application loads catalogs, bookmarks, preferences, and cache data.
+4. Network work runs in child processes that can be cancelled safely.
+5. Completed downloads are recorded for a later library scan.
+6. After BokOPDS closes, the home-screen extension asks the built-in library to
+   scan those files.
+
+## Network safety
+
+- Remote catalog and download addresses must use HTTPS. Plain HTTP is allowed
+  only for local emulator tests.
+- Basic-auth credentials are sent only to the catalog origin they belong to.
+  They are checked again after every redirect.
+- The included Mozilla certificate bundle validates server certificates, and
+  BokOPDS also checks the requested host name.
+- Feed and cover responses have size limits.
+- Downloads cannot escape the configured books directory.
+
+## Saved data
+
+BokOPDS stores catalogs, Basic-auth credentials, bookmarks, language choices,
+and cache records in its application directory. These files are not encrypted.
+Anyone who can read the device storage over USB can also read them.
+
+Deleting a catalog removes its bookmarks and feed cache. **Clear cache** removes
+saved feed and cover data.
+
+Downloads are first written to a `.part` file. A completed file is renamed into
+place in one step. Cancelled and abandoned partial downloads are cleaned up.
+
+## Release package
+
+`scripts/assemble-reader-shell-device.sh` combines the pinned runtime with the
+BokOPDS files. `scripts/build-release.sh` builds the home-screen extension,
+checks the package, and writes release checksums.
+
+The resulting archive contains the BokOPDS application directory and the
+NickelHook library needed to start it from the standard interface.

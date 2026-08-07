@@ -31,10 +31,12 @@ function BokOPDS:show()
             {
                 title = "Nightstand library",
                 url = "https://books.example.invalid/opds",
+                download_directory = "/mnt/onboard/Books",
             },
             {
                 title = "Public domain shelf",
                 url = "https://classics.example.invalid/catalog",
+                download_directory = "/mnt/onboard/Books",
             },
         }
         bookmarks = {

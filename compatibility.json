@@ -333,10 +333,10 @@
   "runtime_version": "v2026.07.1",
   "schema_version": 1,
   "states": {
-    "community-tested": "A community member reported this exact combination working.",
-    "device-tested": "Passed the maintainer physical-device checklist.",
-    "known-issue": "A failure is known and the unsafe profile is disabled.",
-    "not-available": "The runtime recognizes the model, but BokOPDS has no active hook profile.",
-    "untested": "A checked hook profile exists, but this exact combination has no physical report."
+    "community-tested": "A user completed the checklist and the report was reviewed.",
+    "device-tested": "The maintainer completed the full device checklist.",
+    "known-issue": "A reported problem currently prevents support.",
+    "not-available": "BokOPDS is not available for this model and firmware.",
+    "untested": "Support is prepared, but no complete device report is available yet."
   }
 }

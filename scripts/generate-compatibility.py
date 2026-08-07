@@ -229,11 +229,11 @@ def public_document(devices_doc: dict, profiles_doc: dict, devices: dict[str, di
         "runtime_version": devices_doc["runtime_version"],
         "report_url": "https://github.com/realcnbs/BokOPDS/issues/new?template=compatibility-report.yml",
         "states": {
-            "device-tested": "Passed the maintainer physical-device checklist.",
-            "community-tested": "A community member reported this exact combination working.",
-            "untested": "A checked hook profile exists, but this exact combination has no physical report.",
-            "not-available": "The runtime recognizes the model, but BokOPDS has no active hook profile.",
-            "known-issue": "A failure is known and the unsafe profile is disabled."
+            "device-tested": "The maintainer completed the full device checklist.",
+            "community-tested": "A user completed the checklist and the report was reviewed.",
+            "untested": "Support is prepared, but no complete device report is available yet.",
+            "not-available": "BokOPDS is not available for this model and firmware.",
+            "known-issue": "A reported problem currently prevents support."
         },
         "devices": public_devices,
     }
@@ -243,45 +243,40 @@ def render_markdown(document: dict) -> str:
     lines = [
         "# Device compatibility",
         "",
-        "BokOPDS uses a pinned KOReader runtime, but its stock-home button also uses",
-        "firmware-private Nickel symbols. Runtime recognition does not by itself mean",
-        "that the BokOPDS hook is safe on a model or firmware.",
+        "Install BokOPDS only when your exact model and firmware are marked",
+        "**Device tested** or **Community tested**. Other combinations are not ready",
+        "for ordinary installation.",
         "",
-        "| Device | Runtime | Hardware ID | Firmware | BokOPDS state | Last test |",
-        "|---|---|---:|---|---|---|",
+        "| Device | Firmware | Status | Last tested |",
+        "|---|---|---|---|",
     ]
     for device in document["devices"]:
         if device["targets"]:
             for index, target in enumerate(device["targets"]):
-                lines.append("| {name} | Recognized | {hardware} | `{firmware}` | {state} | {last} |".format(
+                lines.append("| {name} | `{firmware}` | {state} | {last} |".format(
                     name=device["name"] if index == 0 else "↳ same device",
-                    hardware=", ".join(target["hardware_ids"]),
                     firmware=target["firmware"],
                     state=target["state_label"],
                     last=(f"{target['last_tested_on']} / {target['last_tested_version']}" if target["last_tested_on"] else "—"),
                 ))
         else:
-            lines.append(f"| {device['name']} | Recognized | {', '.join(device['hardware_ids']) or '—'} | — | Not available | — |")
+            lines.append(f"| {device['name']} | — | Not available | — |")
     lines.extend([
         "",
         "## State meanings",
         "",
-        "- **Device tested:** passed the maintainer physical-device checklist.",
-        "- **Community tested:** a user reported the exact model, firmware and BokOPDS version working.",
-        "- **Untested:** an allowlisted profile exists, but there is no physical-device report yet.",
-        "- **Not available:** the runtime knows the model, but no safe BokOPDS menu-hook profile exists.",
-        "- **Known issue:** the profile is disabled because a failure is known.",
+        "- **Device tested:** the maintainer completed the full device checklist.",
+        "- **Community tested:** a user completed the checklist and the report was reviewed.",
+        "- **Untested:** support is prepared, but no complete device report is available yet.",
+        "- **Not available:** BokOPDS is not available for this model and firmware.",
+        "- **Known issue:** a reported problem currently prevents support.",
         "",
         "## Help test a device",
         "",
-        "If your exact combination is marked **Untested**, please [open a compatibility report](https://github.com/realcnbs/BokOPDS/issues/new?template=compatibility-report.yml).",
-        "Please include the model, hardware ID, firmware, BokOPDS version and checklist results.",
-        "Do not post the device serial number, catalog credentials, or other personal information.",
-        "",
-        "Completely unknown combinations remain inert: the hook does not construct private",
-        "firmware widgets and BokOPDS does not appear in the stock menu.",
-        "",
-        f"This table is generated from the compatibility data for KOReader `{document['runtime_version']}`.",
+        "If your exact combination is marked **Untested**, complete the",
+        "[device checklist](docs/DEVICE_TESTING.md) and then",
+        "[open a compatibility report](https://github.com/realcnbs/BokOPDS/issues/new?template=compatibility-report.yml).",
+        "Do not post the device serial number, catalog credentials, private catalog addresses, or other personal information.",
         "",
     ])
     return "\n".join(lines)

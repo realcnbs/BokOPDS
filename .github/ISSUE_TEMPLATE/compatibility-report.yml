@@ -1,12 +1,12 @@
-name: Device compatibility report
-description: Politely report how BokOPDS behaves on an exact model and firmware.
+name: Report device compatibility
+description: Tell us whether BokOPDS worked on your model and firmware.
 title: "[Compatibility] Model / firmware"
 labels: ["compatibility"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for helping test BokOPDS. Please do not include your device serial number, catalog credentials, or other personal information.
+        Thank you for testing BokOPDS. Before submitting, remove serial numbers, catalog addresses, credentials, book-library details, and other personal information.
   - type: input
     id: model
     attributes:
@@ -17,11 +17,9 @@ body:
   - type: input
     id: hardware
     attributes:
-      label: Hardware ID
-      description: The final numeric model ID, not the serial number.
+      label: Hardware ID, if known
+      description: This is the short numeric model ID, not the serial number. Leave it blank if you are unsure.
       placeholder: "389"
-    validations:
-      required: true
   - type: input
     id: firmware
     attributes:
@@ -32,7 +30,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: BokOPDS version and release SHA-256
+      label: BokOPDS version
+      placeholder: 0.5.9
     validations:
       required: true
   - type: checkboxes
@@ -40,16 +39,16 @@ body:
     attributes:
       label: Test results
       options:
-        - label: Installation completed and exactly one BokOPDS menu item appeared.
-        - label: Launch, exit, relaunch, sleep, wake and frontlight worked.
-        - label: Wi-Fi, OPDS browsing, search and keyboard switching worked.
-        - label: A book downloaded and appeared in the stock library after exit.
-        - label: USB connection and safe return to the stock interface worked.
-        - label: Uninstall or recovery behavior was tested.
+        - label: The installation finished and one BokOPDS item appeared.
+        - label: Open, close, reopen, sleep, wake, and frontlight all worked.
+        - label: Wi-Fi, catalog browsing, search, and keyboard switching worked.
+        - label: A downloaded book appeared in the built-in library after closing BokOPDS.
+        - label: USB connection and return to the standard interface worked.
+        - label: I tested uninstalling or recovery.
   - type: textarea
     id: details
     attributes:
-      label: Details, failures, logs or photographs
-      description: Remove credentials, serial numbers and private catalog information first.
+      label: What happened?
+      description: Describe failures and attach useful logs or photos after removing private information.
     validations:
       required: true

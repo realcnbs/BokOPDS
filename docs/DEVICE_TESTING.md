@@ -1,6 +1,10 @@
-# Package and device testing
+# Test BokOPDS on a reader
 
-## Automated package gate
+Use this checklist before reporting a new model or firmware as compatible.
+Testing changes system files, so use a reader you can recover and back up
+important data first.
+
+## Check the package
 
 ```sh
 ./scripts/test-reader-shell-emulator.sh
@@ -9,35 +13,45 @@
 ./scripts/verify-package.sh dist/KoboRoot.tgz
 ```
 
-The emulator gate covers OPDS 1/2 parsing, invalid JSON structures, trusted and
-rejected TLS certificates, cross-origin credentials, downloads and collision
-filenames, cancellation, navigation state, responsive screenshots and busy-view
-coverage. Package verification walks all ELF files in the real runtime.
-The gate also kills a worker parent with `SIGKILL` and verifies that the worker
-cannot outlive it. The package contract separately kills the launcher and
-verifies that its live runtime still owns the single-instance lock, then checks
-stale-lock recovery after the runtime exits.
+These checks cover catalog parsing, HTTPS and authentication failures,
+downloads, cancellation, navigation, different screen sizes, worker cleanup,
+package contents, and the single-instance launcher.
 
-## Physical-reader checklist
+## Test on the reader
 
-Record model, hardware ID, firmware, archive SHA-256 and free storage.
+Write down the model, firmware, BokOPDS version, archive checksum, and available
+storage. Never record the serial number or catalog credentials.
 
-1. Install from a fully charged reader with no pending stock update.
-2. Confirm exactly one BokOPDS home-navigation item.
-3. Launch, exit, relaunch and force-stop once; confirm stale-lock recovery.
-4. Add public and Basic-auth HTTPS catalogs.
-5. Confirm invalid-host or untrusted certificates fail visibly.
-6. Browse deep catalog paths, bookmark, reopen, go Up, Back and Home.
-7. Search in English and Russian; switch keyboard layout.
-8. Download one book and several books into both configured and new folders.
-9. Cancel a large download; confirm no `.part` remains.
-10. Exit and confirm the books appear in the stock library after its rescan.
-11. Suspend for at least 20 minutes and verify frontlight/power behavior.
-12. Connect USB during idle and after cancelling a request; verify clean USBMS.
-13. Uninstall and confirm the stock UI and downloaded books remain intact.
+1. Start with a charged reader and no pending stock update.
+2. Install BokOPDS and confirm that one BokOPDS item appears in the standard
+   home navigation.
+3. Open, close, reopen, and force-stop BokOPDS once.
+4. Add a public HTTPS catalog and, if available, a Basic-auth catalog.
+5. Confirm that an invalid or untrusted HTTPS certificate shows an error.
+6. Browse several levels, save a bookmark, reopen it, and try **Up**, **Back**,
+   and **Home**.
+7. Search in English and Russian and switch the keyboard layout.
+8. Download one book, then several books, using both the default folder and a
+   new folder.
+9. Cancel a large download and check that no `.part` file remains.
+10. Close BokOPDS and confirm that the downloaded books appear in the built-in
+    library.
+11. Leave the reader idle for at least 20 minutes, then check sleep, wake, and
+    frontlight behavior.
+12. Test a USB connection while idle and after cancelling a request.
+13. Uninstall BokOPDS and confirm that the standard interface and downloaded
+    books remain.
 
-Record the result in `compatibility/reports.json`. Maintainer passes become
-**Device tested**; reviewed user passes become **Community tested**. An enabled
-profile without a physical report remains **Untested**. A failure disables the
-target and becomes **Known issue**. Never record a device serial number or
-catalog credentials.
+## Report the result
+
+Add maintainer results to `compatibility/reports.json`. Community testers can
+use the [compatibility report form](https://github.com/realcnbs/BokOPDS/issues/new?template=compatibility-report.yml).
+
+- **Device tested** means the maintainer completed this checklist.
+- **Community tested** means a user completed the checklist and the report was
+  reviewed.
+- **Untested** means support exists but no complete device report is available.
+- **Known issue** means a reported failure prevents support.
+
+Before sharing logs or photos, remove serial numbers, private catalog addresses,
+credentials, book-library details, and other personal information.

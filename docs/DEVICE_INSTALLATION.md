@@ -1,63 +1,76 @@
-# Device installation
+# Install BokOPDS
 
-## Compatibility
+## Before you start
 
-Use [the generated compatibility table](../COMPATIBILITY.md). The package is
-universal, but the navigation hook activates only for an exact allowlisted
-hardware/firmware target. Runtime support and matching symbol names do not
-prove a compatible private class layout. Unknown combinations remain inert.
+1. Find your exact model and firmware in [Supported devices](../COMPATIBILITY.md).
+   Install only when the combination is marked **Device tested** or
+   **Community tested**.
+2. Back up books and settings that matter to you.
+3. Charge the reader and connect it to Wi-Fi from the standard Kobo interface.
 
-## Build
+Installing `KoboRoot.tgz` changes system files. Do not disconnect or power off
+the reader while it is applying an update.
 
-```sh
-git submodule update --init --recursive
-./scripts/build-release.sh
-```
+## Download
 
-The helper uses the pinned KOReader runtime and NickelHook submodule. It writes
-`KoboRoot.tgz`, `SHA256SUMS`, and the compatibility documents to `dist/`.
+Open the [latest release](https://github.com/realcnbs/BokOPDS/releases/latest)
+and download:
 
-Configure Wi-Fi in the stock Kobo interface before opening BokOPDS. The package
-intentionally excludes the upstream Wi-Fi configuration client because its
-repository does not state redistribution terms.
+- `KoboRoot.tgz`
+- `SHA256SUMS` if you want to verify the download
 
-## Verify without writing
+Optional checksum commands:
 
 ```sh
-./scripts/verify-package.sh dist/KoboRoot.tgz
-BOKOPDS_INSTALL_DRY_RUN=1 ./scripts/install-to-reader.sh \
-  dist/KoboRoot.tgz /path/to/KOBOeReader
+# Linux
+sha256sum -c SHA256SUMS
+
+# macOS
+shasum -a 256 KoboRoot.tgz
+
+# Windows Command Prompt
+certutil -hashfile KoboRoot.tgz SHA256
 ```
 
-The dry run checks the mounted reader identity, firmware, pending-update state,
-archive layout/ABI, and available space. It writes nothing.
+Compare the macOS or Windows result with the value in `SHA256SUMS`.
 
-## Stage installation
+## Copy the update
 
-```sh
-./scripts/install-to-reader.sh \
-  dist/KoboRoot.tgz /path/to/KOBOeReader
-```
+1. Connect the reader by USB and choose **Connect** on its screen.
+2. Open the reader drive, then open the `.kobo` folder.
+3. Check whether `.kobo/KoboRoot.tgz` already exists.
 
-The script creates a mode-`0700` recovery directory containing checksums and
-copies of relevant existing configuration/database/application files. It then
-copies and byte-verifies the archive as `.kobo/KoboRoot.tgz`. Safely eject; the
-stock updater applies it and restarts.
+> **Never overwrite a pending stock update.** If `KoboRoot.tgz` is already in
+> `.kobo`, stop. Safely eject the reader and let it install that update before
+> reconnecting and continuing.
 
-Do not manually overwrite an existing `.kobo/KoboRoot.tgz` or
-`.kobo/KoboRoot.tgz.bokopds-part`.
+4. Copy the downloaded `KoboRoot.tgz` into `.kobo`.
+5. Safely eject the reader.
 
-## Recovery and uninstall
+The reader should install the update and restart. On a supported device,
+**BokOPDS** will then appear in the standard home navigation.
 
-If the stock UI fails after installation, use the NickelHook failsafe behavior
-documented by NickelHook and restore from the installer backup. Do not delete
-the stock database blindly.
+## If BokOPDS does not appear
 
-For normal uninstall:
+- Confirm that the model and firmware match an entry marked **Device tested**
+  or **Community tested**.
+- Restart the reader once more.
+- If the exact combination is supported, open a
+  [GitHub issue](https://github.com/realcnbs/BokOPDS/issues). Include the model,
+  firmware, and BokOPDS version, but not the serial number or catalog details.
+
+Do not delete or replace the built-in library database while troubleshooting.
+
+## Uninstall
+
+The current uninstall helper is run from a cloned copy of the project:
 
 ```sh
 ./scripts/prepare-uninstall.sh /path/to/KOBOeReader
 ```
 
-Safely eject and restart. Downloaded books remain in the configured publication
-folder.
+Safely eject and restart after the helper finishes. BokOPDS is removed;
+downloaded books stay on the reader.
+
+Developers building or testing local packages should use
+[DEVELOPING.md](../DEVELOPING.md).

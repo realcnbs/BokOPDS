@@ -2898,6 +2898,18 @@ function Shell:showDemo(screen_name)
             self.current_feed.title = "Arthur C. Clarke"
             self.current_feed.source_url = "https://example.invalid/opds/authors/clarke"
             self.current_feed.up_url = "https://example.invalid/opds/authors"
+            self.current_feed.entries = {
+                { title = "Childhood's End", author = "Arthur C. Clarke",
+                    publication = true, acquisitions = {} },
+                { title = "Rendezvous with Rama", author = "Arthur C. Clarke",
+                    publication = true, acquisitions = {} },
+                { title = "2001: A Space Odyssey", author = "Arthur C. Clarke",
+                    publication = true, acquisitions = {} },
+                { title = "The City and the Stars", author = "Arthur C. Clarke",
+                    publication = true, acquisitions = {} },
+                { title = "The Fountains of Paradise", author = "Arthur C. Clarke",
+                    publication = true, acquisitions = {} },
+            }
             self.feed_return_screen = "bookmarks"
             self.bookmark_parent_url = self.current_feed.up_url
             self.bookmark_path = nil
