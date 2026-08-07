@@ -1,0 +1,342 @@
+{
+  "devices": [
+    {
+      "codenames": [
+        "trilogy"
+      ],
+      "hardware_ids": [
+        "310"
+      ],
+      "id": "kobo-touch-a",
+      "name": "Kobo Touch (A)",
+      "runtime_model": "Kobo_trilogy_A",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "trilogy"
+      ],
+      "hardware_ids": [
+        "310"
+      ],
+      "id": "kobo-touch-b",
+      "name": "Kobo Touch (B)",
+      "runtime_model": "Kobo_trilogy_B",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "trilogy"
+      ],
+      "hardware_ids": [
+        "320"
+      ],
+      "id": "kobo-touch-c",
+      "name": "Kobo Touch (C)",
+      "runtime_model": "Kobo_trilogy_C",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "pixie"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-mini",
+      "name": "Kobo Mini",
+      "runtime_model": "Kobo_pixie",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "daylight"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-aura-one",
+      "name": "Kobo Aura ONE",
+      "runtime_model": "Kobo_daylight",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "dahlia"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-aura-h2o",
+      "name": "Kobo Aura H2O",
+      "runtime_model": "Kobo_dahlia",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "dragon"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-aura-hd",
+      "name": "Kobo Aura HD",
+      "runtime_model": "Kobo_dragon",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "kraken"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-glo",
+      "name": "Kobo Glo",
+      "runtime_model": "Kobo_kraken",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "phoenix"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-aura",
+      "name": "Kobo Aura",
+      "runtime_model": "Kobo_phoenix",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "snow"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-aura-h2o-2",
+      "name": "Kobo Aura H2O Edition 2",
+      "runtime_model": "Kobo_snow",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "snow"
+      ],
+      "hardware_ids": [
+        "378"
+      ],
+      "id": "kobo-aura-h2o-2-r2",
+      "name": "Kobo Aura H2O Edition 2 (revision 2)",
+      "runtime_model": "Kobo_snow_r2",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "star"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-aura-edition-2",
+      "name": "Kobo Aura Edition 2",
+      "runtime_model": "Kobo_star",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "star"
+      ],
+      "hardware_ids": [
+        "379"
+      ],
+      "id": "kobo-aura-edition-2-r2",
+      "name": "Kobo Aura Edition 2 (revision 2)",
+      "runtime_model": "Kobo_star_r2",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "alyssum"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-glo-hd",
+      "name": "Kobo Glo HD",
+      "runtime_model": "Kobo_alyssum",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "pika"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-touch-2",
+      "name": "Kobo Touch 2.0",
+      "runtime_model": "Kobo_pika",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "nova"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-clara-hd",
+      "name": "Kobo Clara HD",
+      "runtime_model": "Kobo_nova",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "frost"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-forma",
+      "name": "Kobo Forma",
+      "runtime_model": "Kobo_frost",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "storm"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-libra-h2o",
+      "name": "Kobo Libra H2O",
+      "runtime_model": "Kobo_storm",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "luna"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-nia",
+      "name": "Kobo Nia",
+      "runtime_model": "Kobo_luna",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "europa"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-elipsa",
+      "name": "Kobo Elipsa",
+      "runtime_model": "Kobo_europa",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "cadmus"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-sage",
+      "name": "Kobo Sage",
+      "runtime_model": "Kobo_cadmus",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "io"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-libra-2",
+      "name": "Kobo Libra 2",
+      "runtime_model": "Kobo_io",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "goldfinch"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-clara-2e",
+      "name": "Kobo Clara 2E",
+      "runtime_model": "Kobo_goldfinch",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "condor"
+      ],
+      "hardware_ids": [
+        "389"
+      ],
+      "id": "kobo-elipsa-2e",
+      "name": "Kobo Elipsa 2E",
+      "runtime_model": "Kobo_condor",
+      "runtime_recognized": true,
+      "targets": [
+        {
+          "enabled": true,
+          "evidence_urls": [],
+          "firmware": "4.38.23697",
+          "hardware_ids": [
+            "389"
+          ],
+          "id": "elipsa2e-389-fw4.38.23697",
+          "last_tested_on": "2026-08-07",
+          "last_tested_version": "0.5.8",
+          "report_count": 1,
+          "state": "device-tested",
+          "state_label": "Device tested"
+        }
+      ]
+    },
+    {
+      "codenames": [
+        "monza",
+        "monzaKobo"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-libra-colour",
+      "name": "Kobo Libra Colour",
+      "runtime_model": "Kobo_monza",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "spaBW",
+        "spaKoboBW",
+        "spaBWTPV"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-clara-bw",
+      "name": "Kobo Clara BW",
+      "runtime_model": "Kobo_spaBW",
+      "runtime_recognized": true,
+      "targets": []
+    },
+    {
+      "codenames": [
+        "spaColour",
+        "spaKoboColour"
+      ],
+      "hardware_ids": [],
+      "id": "kobo-clara-colour",
+      "name": "Kobo Clara Colour",
+      "runtime_model": "Kobo_spaColour",
+      "runtime_recognized": true,
+      "targets": []
+    }
+  ],
+  "report_url": "https://github.com/realcnbs/BokOPDS/issues/new?template=compatibility-report.yml",
+  "runtime_version": "v2026.07.1",
+  "schema_version": 1,
+  "states": {
+    "community-tested": "A community member reported this exact combination working.",
+    "device-tested": "Passed the maintainer physical-device checklist.",
+    "known-issue": "A failure is known and the unsafe profile is disabled.",
+    "not-available": "The runtime recognizes the model, but BokOPDS has no active hook profile.",
+    "untested": "A checked hook profile exists, but this exact combination has no physical report."
+  }
+}

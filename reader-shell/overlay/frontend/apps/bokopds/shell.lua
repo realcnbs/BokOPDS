@@ -2423,7 +2423,13 @@ function Shell:activate(action)
         for _, path in ipairs(self.cover_cache) do os.remove(path) end
         self.cover_cache = {}
         self:saveFeedCache(); self:saveState(); self:setStatus("Catalog cache cleared", false)
-    elseif action == "dismiss-status" then self:clearStatus()
+    elseif action == "dismiss-status" then
+        if self.compatibility_warning_id then
+            self.settings:saveSetting("compatibility_warning_ack", self.compatibility_warning_id)
+            self.settings:flush()
+            self.compatibility_warning_id = nil
+        end
+        self:clearStatus()
     elseif action == "cancel-network" and self.dismiss_callback then self.dismiss_callback()
     elseif action == "save-catalog" then self:saveCatalog()
     elseif action == "save-bookmark-name" then self:saveBookmarkName()
@@ -2933,6 +2939,13 @@ function Shell:runSelfTest(report_path)
     self:setStatus("Persistent error", true)
     assert(not self.status_timeout, "error status should not auto-dismiss")
     self:clearStatus()
+    self.compatibility_warning_id = "self-test-target"
+    self:setStatus("Untested compatibility warning", true)
+    self:activate("dismiss-status")
+    assert(self.settings:readSetting("compatibility_warning_ack") == "self-test-target",
+        "dismissed compatibility warning was not acknowledged")
+    self.settings:delSetting("compatibility_warning_ack")
+    self.settings:flush()
     local original_network_manager = self.network_manager
     local connection_requested, connected_callback = false, false
     local mock_connected, mock_online = false, false

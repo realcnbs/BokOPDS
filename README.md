@@ -9,10 +9,11 @@ bookmark catalog locations, filter by preferred publication language, inspect
 book metadata, and download one or several books. Completed downloads request
 a stock-library rescan.
 
-> **Compatibility:** the installer currently accepts only the
-> Kobo Elipsa 2E hardware family ID `389` running firmware `4.38.23697`. The
-> home-navigation hook uses private firmware symbols. Do not bypass this check
-> on another model or firmware.
+> **Compatibility:** one universal package is used for every allowlisted
+> target, but that does not mean every Kobo model is supported. The hook stays
+> inert unless the hardware ID and exact firmware match a checked profile.
+> See the generated [device compatibility table](COMPATIBILITY.md). The current
+> physical-device test covers Kobo Elipsa 2E family ID `389` on `4.38.23697`.
 
 ## Highlights
 
@@ -27,26 +28,31 @@ a stock-library rescan.
   cancellable requests and bounded feed/cover responses
 - Main-library refresh request after downloads
 
-## Install a locally built archive
+## Install a release archive
 
 Installing a system archive modifies software on the reader. Back up important
 books and settings first. Charge the reader and do not interrupt an update.
 
-1. Build `bokopds-local-device-<version>.tgz` and its SHA-256 file from a clean
-   committed checkout as described below.
-2. Connect the reader by USB and identify its mounted storage root. That root
-   contains `.kobo/version`.
-3. Verify and stage the archive from this source tree:
+1. Read [COMPATIBILITY.md](COMPATIBILITY.md) and find the exact model and
+   firmware. **Not available** combinations will install inertly and have no
+   BokOPDS menu item.
+2. Download `KoboRoot.tgz` and `SHA256SUMS` from the same release. Verify the
+   checksum with `sha256sum` on Linux, `shasum -a 256` on macOS, or
+   `certutil -hashfile KoboRoot.tgz SHA256` on Windows.
+3. Connect the reader by USB. Confirm that `.kobo` does not already contain a
+   pending `KoboRoot.tgz`; never overwrite a pending stock update.
+4. Copy the downloaded `KoboRoot.tgz` into `.kobo`, safely eject, and allow the
+   reader to apply the update and restart.
+
+Developers may instead verify, back up, and stage a locally built archive with:
 
    ```sh
-   (cd dist && sha256sum -c bokopds-local-device-<version>.tgz.sha256)
+   (cd dist && sha256sum -c SHA256SUMS)
    ./scripts/install-to-reader.sh \
-     dist/bokopds-local-device-<version>.tgz /path/to/KOBOeReader
+     dist/KoboRoot.tgz /path/to/KOBOeReader
    ```
 
-4. Safely eject. The reader installs the update and restarts.
-
-The installer is model/firmware gated, refuses an existing pending update,
+The developer installer uses the packaged compatibility manifest, refuses an existing pending update,
 checks compressed and unpacked space, verifies package layout/ABI, and saves a
 private local recovery backup before writing `.kobo/KoboRoot.tgz`.
 
@@ -95,14 +101,9 @@ git submodule update --init --recursive
 ./scripts/build-release.sh
 ```
 
-The device archive, source-materials bundle and checksums are written to
-`dist/`. The build downloads only
-archives pinned with SHA-256 in `reader-shell/runtime.lock`. Set
-`SOURCE_DATE_EPOCH` to reproduce archive metadata; the release helper derives
-it from Git. Reproducible builds require a clean committed tree and record that
-exact commit in the installed `SOURCE_REVISION` file. Compilation and packaging run
-from a detached immutable worktree, so concurrent edits cannot enter an archive
-under the wrong revision.
+`KoboRoot.tgz`, `SHA256SUMS`, and the compatibility documents are written to
+`dist/`. Downloaded runtime archives are pinned by SHA-256 in
+`reader-shell/runtime.lock`.
 
 ## Architecture
 
@@ -112,7 +113,9 @@ BokOPDS has three active parts:
 2. A pinned, trimmed KOReader runtime providing mature e-ink rendering,
    keyboard, device/event, networking, suspend and USB infrastructure.
 3. A small C++ NickelHook extension in `device-hook` which adds the stock-home
-   navigation item and requests a library scan after the app exits.
+   navigation item and requests a library scan after the app exits. Its
+   generated compatibility table selects an exact hardware/firmware profile;
+   missing targets or symbols leave the extension inert.
 
 The retired standalone C++ framebuffer application is not part of this source
 tree or binary package. See [architecture](docs/ARCHITECTURE.md).
@@ -134,10 +137,6 @@ BokOPDS; the app detects and uses the existing connection.
 This is an early community source release with one deliberately narrow tested
 device target. It is not affiliated with or endorsed by Rakuten Kobo, KOReader,
 or the OPDS specification maintainers.
-
-Generated device packages are currently intended for local testing. Review the
-licenses and source-distribution requirements of all bundled runtime components
-before publishing a binary package.
 
 BokOPDS source is licensed under `AGPL-3.0-or-later`; see [LICENSE](LICENSE).
 Third-party components keep their own licenses.

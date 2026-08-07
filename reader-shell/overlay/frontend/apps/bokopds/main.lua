@@ -35,6 +35,15 @@ function BokOPDS:show()
         bookmarks = bookmarks,
         settings = settings,
     }
+    local compatibility_state = os.getenv("BOKOPDS_COMPATIBILITY_STATE")
+    local compatibility_target = os.getenv("BOKOPDS_COMPATIBILITY_TARGET")
+    if compatibility_state == "untested" and compatibility_target and
+            settings:readSetting("compatibility_warning_ack") ~= compatibility_target then
+        shell.compatibility_warning_id = compatibility_target
+        shell:setStatus(
+            "This model and firmware have not been physically tested. Please report the result.",
+            true)
+    end
     -- Screensaver and USB confirmation code share a few upstream service
     -- helpers with the full reader/file manager. Expose this shell as the
     -- active UI without loading either application.

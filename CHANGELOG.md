@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+## 0.5.9 - 2026-08-07
+
+- Added a generated compatibility catalog covering every Kobo model recognized
+  by the pinned runtime and exact firmware-specific NickelHook targets.
+- Reworked the stock-home hook into a universal guarded binary which remains
+  inert on unknown, disabled, or symbol-incompatible firmware.
+- Added persistent first-launch warnings for known but physically untested
+  targets and a privacy-safe community compatibility report form.
+- Changed release output to the OS-neutral `KoboRoot.tgz`, checksums, and public
+  compatibility documents.
+
 ## 0.5.8 - 2026-08-07
 
 - Replaced the retired custom framebuffer UI with a KOReader-based Lua shell.

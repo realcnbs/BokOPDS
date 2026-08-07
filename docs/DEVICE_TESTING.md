@@ -4,8 +4,9 @@
 
 ```sh
 ./scripts/test-reader-shell-emulator.sh
+./tests/package_layout_test.sh
 ./scripts/build-release.sh
-./scripts/verify-package.sh dist/bokopds-local-device-0.5.8.tgz
+./scripts/verify-package.sh dist/KoboRoot.tgz
 ```
 
 The emulator gate covers OPDS 1/2 parsing, invalid JSON structures, trusted and
@@ -35,5 +36,8 @@ Record model, hardware ID, firmware, archive SHA-256 and free storage.
 12. Connect USB during idle and after cancelling a request; verify clean USBMS.
 13. Uninstall and confirm the stock UI and downloaded books remain intact.
 
-Do not expand the installer allowlist until this checklist passes on the exact
-new firmware/model and the private widget size/behavior is revalidated.
+Record the result in `compatibility/reports.json`. Maintainer passes become
+**Device tested**; reviewed user passes become **Community tested**. An enabled
+profile without a physical report remains **Untested**. A failure disables the
+target and becomes **Known issue**. Never record a device serial number or
+catalog credentials.

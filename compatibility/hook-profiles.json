@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "abi_profiles": [
+    {
+      "id": "nickel-4.38.23697-mainnav-v1",
+      "widget_storage_bytes": 512,
+      "symbols": {
+        "main_nav_constructor": "_ZN13MainNavButtonC1EP7QWidget",
+        "main_nav_set_pixmap": "_ZN13MainNavButton9setPixmapERK7QString",
+        "main_nav_set_active_pixmap": "_ZN13MainNavButton15setActivePixmapERK7QString",
+        "main_nav_set_text": "_ZN13MainNavButton7setTextERK7QString",
+        "library_refresh_shared_instance": "_ZN19PlugWorkflowManager14sharedInstanceEv",
+        "library_refresh_sync": "_ZN19PlugWorkflowManager4syncEv"
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "elipsa2e-389-fw4.38.23697",
+      "device_id": "kobo-elipsa-2e",
+      "hardware_ids": ["389"],
+      "firmware": "4.38.23697",
+      "abi_profile": "nickel-4.38.23697-mainnav-v1",
+      "enabled": true
+    }
+  ]
+}

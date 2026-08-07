@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QPushButton>
 #include <QString>
+#include <QStringList>
 #include <QTimer>
 #include <QWidget>
 
@@ -14,6 +15,7 @@
 #include <signal.h>
 #include <sys/types.h>
 
+#include <cstddef>
 #include <cstdlib>
 #include <new>
 
@@ -28,12 +30,9 @@ typedef QWidget MainNavButton;
 typedef QWidget MainNavView;
 typedef void PlugWorkflowManager;
 
-void (*MainNavButton_construct)(MainNavButton*, QWidget* parent);
-void (*MainNavButton_setPixmap)(MainNavButton*, const QString& name);
-void (*MainNavButton_setActivePixmap)(MainNavButton*, const QString& name);
-void (*MainNavButton_setText)(MainNavButton*, const QString& text);
-PlugWorkflowManager* (*PlugWorkflowManager_sharedInstance)();
-void (*PlugWorkflowManager_sync)(PlugWorkflowManager*);
+#include "../generated/compatibility_profiles.h"
+
+BokOPDSCompatibilityTarget* active_target = nullptr;
 
 struct nh_info BokOPDSInfo = {
     .name = "BokOPDS",
@@ -43,35 +42,58 @@ struct nh_info BokOPDSInfo = {
     .failsafe_delay = 3,
 };
 
-struct nh_dlsym BokOPDSSymbols[] = {
-    {.name = "_ZN13MainNavButtonC1EP7QWidget",
-     .out = nh_symoutptr(MainNavButton_construct),
-     .desc = "main navigation button constructor",
-     .optional = false},
-    {.name = "_ZN13MainNavButton9setPixmapERK7QString",
-     .out = nh_symoutptr(MainNavButton_setPixmap),
-     .desc = "main navigation icon setter",
-     .optional = false},
-    {.name = "_ZN13MainNavButton15setActivePixmapERK7QString",
-     .out = nh_symoutptr(MainNavButton_setActivePixmap),
-     .desc = "active main navigation icon setter",
-     .optional = false},
-    {.name = "_ZN13MainNavButton7setTextERK7QString",
-     .out = nh_symoutptr(MainNavButton_setText),
-     .desc = "main navigation label setter",
-     .optional = false},
-    {.name = "_ZN19PlugWorkflowManager14sharedInstanceEv",
-     .out = nh_symoutptr(PlugWorkflowManager_sharedInstance),
-     .desc = "library refresh manager",
-     .optional = true},
-    {.name = "_ZN19PlugWorkflowManager4syncEv",
-     .out = nh_symoutptr(PlugWorkflowManager_sync),
-     .desc = "library refresh action",
-     .optional = true},
-    {0},
-};
-
 void refresh_library_if_pending();
+
+bool read_device_identity(QString* firmware, QString* hardware_id) {
+    QFile version_file(QStringLiteral("/mnt/onboard/.kobo/version"));
+    if (!version_file.open(QIODevice::ReadOnly)) {
+        nh_log("compatibility check could not read the device version file");
+        return false;
+    }
+    const QString version = QString::fromLatin1(version_file.readLine()).trimmed();
+    const QStringList fields = version.split(QLatin1Char(','));
+    if (fields.size() < 4) {
+        nh_log("compatibility check found a malformed device version file");
+        return false;
+    }
+    *firmware = fields.at(2).trimmed();
+    QString identifier = fields.at(fields.size() - 1).trimmed();
+    identifier = identifier.section(QLatin1Char('-'), -1);
+    while (identifier.size() > 1 && identifier.startsWith(QLatin1Char('0'))) {
+        identifier.remove(0, 1);
+    }
+    if (firmware->isEmpty() || identifier.isEmpty()) {
+        nh_log("compatibility check could not determine firmware or hardware id");
+        return false;
+    }
+    *hardware_id = identifier;
+    return true;
+}
+
+BokOPDSCompatibilityTarget* select_compatibility_target(const QString& firmware,
+                                                         const QString& hardware_id) {
+    for (std::size_t index = 0; index < BokOPDSTargetCount; ++index) {
+        BokOPDSCompatibilityTarget* target = &BokOPDSTargets[index];
+        if (firmware != QString::fromLatin1(target->firmware)) {
+            continue;
+        }
+        for (std::size_t hardware_index = 0;
+             hardware_index < target->hardware_id_count; ++hardware_index) {
+            if (hardware_id == QString::fromLatin1(target->hardware_ids[hardware_index])) {
+                return target;
+            }
+        }
+    }
+    return nullptr;
+}
+
+bool target_has_required_symbols(const BokOPDSCompatibilityTarget* target) {
+    const BokOPDSAbiProfile* abi = target->abi;
+    return abi != nullptr && abi->main_nav_construct != nullptr &&
+           abi->main_nav_set_pixmap != nullptr &&
+           abi->main_nav_set_active_pixmap != nullptr &&
+           abi->main_nav_set_text != nullptr;
+}
 
 bool application_is_running() {
     QDir lock(QString::fromLatin1(runtime_lock_directory));
@@ -94,14 +116,23 @@ bool application_is_running() {
 
 bool launch_application() {
     qint64 process_id = 0;
+    if (active_target == nullptr) {
+        nh_log("refused to launch without an active compatibility target");
+        return false;
+    }
+    const QString command =
+        QStringLiteral("export BOKOPDS_COMPATIBILITY_TARGET='") +
+        QString::fromLatin1(active_target->id) +
+        QStringLiteral("' BOKOPDS_COMPATIBILITY_STATE='") +
+        QString::fromLatin1(active_target->state) +
+        QStringLiteral("'; exec \"") + QString::fromLatin1(launcher_path) +
+        QStringLiteral("\"");
     const bool started = QProcess::startDetached(QStringLiteral("/bin/sh"),
                                    QStringList() << QStringLiteral("-c")
-                                                 << QStringLiteral("exec \"") +
-                                                        QString::fromLatin1(launcher_path) +
-                                                        QStringLiteral("\""),
+                                                 << command,
                                    QString::fromLatin1(application_directory), &process_id);
-    if (started && PlugWorkflowManager_sharedInstance != nullptr &&
-        PlugWorkflowManager_sync != nullptr) {
+    if (started && active_target->abi->library_refresh_shared_instance != nullptr &&
+        active_target->abi->library_refresh_sync != nullptr) {
         // Watch only after a launch. The stock process should not wake and stat
         // the FAT filesystem forever when BokOPDS has never been opened.
         QTimer* refresh_timer = new QTimer(QApplication::instance());
@@ -139,16 +170,18 @@ void refresh_library_if_pending() {
     if (application_is_running()) {
         return;
     }
-    if (PlugWorkflowManager_sharedInstance == nullptr || PlugWorkflowManager_sync == nullptr) {
+    if (active_target == nullptr || active_target->abi == nullptr ||
+        active_target->abi->library_refresh_shared_instance == nullptr ||
+        active_target->abi->library_refresh_sync == nullptr) {
         nh_log("library refresh is pending but the required firmware symbols are unavailable");
         return;
     }
-    PlugWorkflowManager* workflow = PlugWorkflowManager_sharedInstance();
+    PlugWorkflowManager* workflow = active_target->abi->library_refresh_shared_instance();
     if (workflow == nullptr) {
         nh_log("library refresh is pending but the workflow manager is unavailable");
         return;
     }
-    PlugWorkflowManager_sync(workflow);
+    active_target->abi->library_refresh_sync(workflow);
     if (!QFile::remove(QString::fromLatin1(library_refresh_marker))) {
         nh_log("library refresh was requested but the pending marker could not be removed");
         return;
@@ -157,6 +190,9 @@ void refresh_library_if_pending() {
 }
 
 bool add_navigation_button(MainNavView* view) {
+    if (active_target == nullptr || !target_has_required_symbols(active_target)) {
+        return false;
+    }
     if (view->findChild<QWidget*>(QStringLiteral("bokopdsButton")) != nullptr) {
         return true;
     }
@@ -165,19 +201,20 @@ bool add_navigation_button(MainNavView* view) {
         return false;
     }
 
-    // MainNavButton is a private firmware class. This storage size was checked
-    // on the only firmware accepted by the installer. Use the C++ allocator so
-    // QObject/Qt destruction calls the matching operator delete.
+    // MainNavButton is a private firmware class. The selected target carries
+    // the storage size checked for its exact firmware ABI. Use the C++
+    // allocator so QObject/Qt destruction calls the matching operator delete.
+    BokOPDSAbiProfile* abi = active_target->abi;
     MainNavButton* button = reinterpret_cast<MainNavButton*>(
-        ::operator new(512, std::nothrow));
+        ::operator new(abi->widget_storage_bytes, std::nothrow));
     if (button == nullptr) {
         nh_log("could not allocate main navigation button");
         return false;
     }
-    MainNavButton_construct(button, view->parentWidget());
-    MainNavButton_setText(button, QStringLiteral("BokOPDS"));
-    MainNavButton_setPixmap(button, QStringLiteral("/mnt/onboard/.adds/bokopds/menu-book.png"));
-    MainNavButton_setActivePixmap(
+    abi->main_nav_construct(button, view->parentWidget());
+    abi->main_nav_set_text(button, QStringLiteral("BokOPDS"));
+    abi->main_nav_set_pixmap(button, QStringLiteral("/mnt/onboard/.adds/bokopds/menu-book.png"));
+    abi->main_nav_set_active_pixmap(
         button, QStringLiteral("/mnt/onboard/.adds/bokopds/menu-book-active.png"));
     button->setObjectName(QStringLiteral("bokopdsButton"));
 
@@ -219,6 +256,31 @@ bool find_navigation_and_add_button() {
 }
 
 int initialize_application() {
+    BokOPDSRefreshResolvedSymbols();
+    QString firmware;
+    QString hardware_id;
+    if (!read_device_identity(&firmware, &hardware_id)) {
+        nh_log("BokOPDS remains inactive because device identity is unavailable");
+        return 0;
+    }
+    active_target = select_compatibility_target(firmware, hardware_id);
+    if (active_target == nullptr) {
+        nh_log("BokOPDS remains inactive on unknown hardware %s firmware %s",
+               hardware_id.toLatin1().constData(), firmware.toLatin1().constData());
+        return 0;
+    }
+    if (!active_target->enabled) {
+        nh_log("BokOPDS compatibility target %s is disabled", active_target->id);
+        active_target = nullptr;
+        return 0;
+    }
+    if (!target_has_required_symbols(active_target)) {
+        nh_log("BokOPDS target %s is missing required firmware symbols and remains inactive",
+               active_target->id);
+        active_target = nullptr;
+        return 0;
+    }
+    nh_log("selected compatibility target %s", active_target->id);
     // Wait until the stock interface, and any other main-menu extension, has
     // finished constructing the navigation. Adding our button afterward avoids
     // competing hooks and makes initialization order irrelevant.

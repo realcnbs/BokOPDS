@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "reports": [
+    {
+      "id": "maintainer-elipsa2e-389-4.38.23697-0.5.8",
+      "target_id": "elipsa2e-389-fw4.38.23697",
+      "kind": "maintainer",
+      "result": "passed",
+      "bokopds_version": "0.5.8",
+      "tested_on": "2026-08-07",
+      "evidence_url": null,
+      "notes": "Physical-device validation by the maintainer."
+    }
+  ]
+}

@@ -1,12 +1,11 @@
 # Device installation
 
-## Supported target
+## Compatibility
 
-- Kobo Elipsa 2E hardware family ID `389`
-- firmware `4.38.23697`
-
-This restriction is intentional. The navigation hook constructs a private
-firmware widget. Matching symbol names do not prove a compatible class layout.
+Use [the generated compatibility table](../COMPATIBILITY.md). The package is
+universal, but the navigation hook activates only for an exact allowlisted
+hardware/firmware target. Runtime support and matching symbol names do not
+prove a compatible private class layout. Unknown combinations remain inert.
 
 ## Build
 
@@ -15,15 +14,8 @@ git submodule update --init --recursive
 ./scripts/build-release.sh
 ```
 
-The build helper uses the pinned KOReader binary/runtime sources and the
-NickelHook submodule. It builds the hook with
-the digest-pinned `ghcr.io/pgaskin/nickeltc:1.0` image, then writes the archive
-and SHA-256 file to `dist/`, along with a source-materials bundle and its
-checksum. Generated binary archives are for local installation and testing;
-see `THIRD_PARTY.md` before any redistribution.
-
-The build refuses an uncommitted or dirty tree and embeds the exact BokOPDS
-source commit in `SOURCE_REVISION`.
+The helper uses the pinned KOReader runtime and NickelHook submodule. It writes
+`KoboRoot.tgz`, `SHA256SUMS`, and the compatibility documents to `dist/`.
 
 Configure Wi-Fi in the stock Kobo interface before opening BokOPDS. The package
 intentionally excludes the upstream Wi-Fi configuration client because its
@@ -32,9 +24,9 @@ repository does not state redistribution terms.
 ## Verify without writing
 
 ```sh
-./scripts/verify-package.sh dist/bokopds-local-device-0.5.8.tgz
+./scripts/verify-package.sh dist/KoboRoot.tgz
 BOKOPDS_INSTALL_DRY_RUN=1 ./scripts/install-to-reader.sh \
-  dist/bokopds-local-device-0.5.8.tgz /path/to/KOBOeReader
+  dist/KoboRoot.tgz /path/to/KOBOeReader
 ```
 
 The dry run checks the mounted reader identity, firmware, pending-update state,
@@ -44,7 +36,7 @@ archive layout/ABI, and available space. It writes nothing.
 
 ```sh
 ./scripts/install-to-reader.sh \
-  dist/bokopds-local-device-0.5.8.tgz /path/to/KOBOeReader
+  dist/KoboRoot.tgz /path/to/KOBOeReader
 ```
 
 The script creates a mode-`0700` recovery directory containing checksums and

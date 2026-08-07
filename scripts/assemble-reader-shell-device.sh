@@ -7,6 +7,7 @@ project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cache_dir="${project_dir}/build/runtime-cache"
 output_dir="${1:-${project_dir}/build/reader-shell-device}"
 archive="${cache_dir}/reader-shell-${RUNTIME_VERSION}-kobo.zip"
+mkdir -p "${project_dir}/build"
 work_dir=$(mktemp -d "${project_dir}/build/.reader-shell-device.XXXXXX")
 
 cleanup() {
@@ -14,7 +15,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-mkdir -p "${cache_dir}" "${project_dir}/build"
+mkdir -p "${cache_dir}"
 if [ ! -f "${archive}" ]; then
     curl --fail --location --retry 3 --output "${archive}.part" "${RUNTIME_DEVICE_URL}"
     mv -- "${archive}.part" "${archive}"

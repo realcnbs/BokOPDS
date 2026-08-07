@@ -26,7 +26,8 @@ tar -xzf "${package}" -C "${stage}"
 app="${stage}/mnt/onboard/.adds/bokopds"
 for relative in \
     reader.lua bokopds.lua koreader.sh luajit tar launch.sh menu-book.png menu-book-active.png \
-    VERSION SOURCE_REVISION COPYING data/ca-bundle.crt frontend/apps/bokopds/main.lua \
+    VERSION SOURCE_REVISION COMPATIBILITY.md compatibility.json COPYING \
+    data/ca-bundle.crt frontend/apps/bokopds/main.lua \
     frontend/apps/bokopds/shell.lua frontend/apps/bokopds/catalog_service.lua \
     frontend/apps/bokopds/secure_http.lua frontend/apps/bokopds/subprocess_guard.lua \
     frontend/apps/bokopds/opdsparser.lua \
@@ -37,6 +38,12 @@ for relative in \
     [ -f "${app}/${relative}" ] || { echo "missing package path: ${relative}" >&2; exit 1; }
 done
 source_revision=$(cat "${app}/SOURCE_REVISION")
+cmp -s "${app}/compatibility.json" "${project_dir}/compatibility.json" || {
+    echo "packaged compatibility manifest differs from the generated source" >&2; exit 1; }
+cmp -s "${app}/COMPATIBILITY.md" "${project_dir}/COMPATIBILITY.md" || {
+    echo "packaged compatibility document differs from the generated source" >&2; exit 1; }
+python3 -m json.tool "${app}/compatibility.json" >/dev/null || {
+    echo "packaged compatibility manifest is invalid JSON" >&2; exit 1; }
 if [ "${BOKOPDS_ALLOW_TEST_ARTIFACTS:-0}" != "1" ] &&
     ! printf '%s\n' "${source_revision}" | grep -Eq '^[0-9a-f]{40}$'; then
     echo "package has no valid committed source revision" >&2

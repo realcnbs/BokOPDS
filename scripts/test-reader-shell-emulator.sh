@@ -3,6 +3,7 @@ set -eu
 
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 runtime_dir="${project_dir}/build/reader-shell-emulator"
+mkdir -p "${project_dir}/build"
 test_root=$(mktemp -d "${project_dir}/build/.reader-shell-test.XXXXXX")
 free_port() {
     python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()'

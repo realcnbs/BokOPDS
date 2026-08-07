@@ -43,6 +43,16 @@ printf '%s\n' 'existing application configuration' > \
 printf '%s\n' 'N000,4.9.77,4.38.23697,4.9.77,4.9.77,00000000-0000-0000-0000-000000000389' > \
     "${temp}/reader/.kobo/version"
 printf '%s\n' 'test database' > "${temp}/reader/.kobo/KoboReader.sqlite"
+"${project_dir}/scripts/check-device-compatibility.py" \
+    "${project_dir}/compatibility.json" "${temp}/reader/.kobo/version" \
+    > "${temp}/compatibility-tested.out"
+grep -F 'Device tested' "${temp}/compatibility-tested.out" >/dev/null
+"${project_dir}/scripts/check-device-compatibility.py" \
+    "${project_dir}/tests/fixtures/compatibility-untested.json" \
+    "${temp}/reader/.kobo/version" > "${temp}/compatibility-untested.out" \
+    2> "${temp}/compatibility-untested.err"
+grep -F 'Untested' "${temp}/compatibility-untested.out" >/dev/null
+grep -F 'WARNING:' "${temp}/compatibility-untested.err" >/dev/null
 BOKOPDS_ALLOW_TEST_ARTIFACTS=1 BOKOPDS_INSTALL_DRY_RUN=1 \
     "${project_dir}/scripts/install-to-reader.sh" "${temp}/bokopds-device.tgz" \
     "${temp}/reader" "${temp}/backups"

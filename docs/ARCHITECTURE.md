@@ -3,9 +3,12 @@
 ## Runtime layers
 
 `device-hook` is a small C++/Qt NickelHook module loaded by the stock interface.
-It resolves the private `MainNavButton` symbols for the one supported firmware,
-adds the BokOPDS navigation item, launches `device-runtime/launch.sh`, and calls
-the stock library workflow when a completed-download marker is pending.
+Generated data gives it an allowlist of exact hardware/firmware targets and
+their private `MainNavButton` ABI. All listed symbols are resolved optionally.
+The hook reads `.kobo/version`, selects one exact enabled target, verifies every
+required symbol, and only then constructs the menu item. Unknown combinations
+remain inert. The hook launches `device-runtime/launch.sh` and calls the stock
+library workflow when a completed-download marker is pending.
 
 `device-runtime/launch.sh` owns the single-instance lock and persistent runtime
 directory. It launches the bundled reader runtime, preserves logs, constrains
@@ -36,8 +39,8 @@ keyboard, event loop, network manager, task wrapper, suspend and USB services.
 - Feed and decoded/disk cover caches are bounded and scoped by catalog account.
 - Packages reject traversal, links, special files, obsolete payloads and
   non-ARM runtime ELFs.
-- The firmware hook is allowlisted to an exact tested firmware because it uses
-  a private C++ ABI.
+- The firmware hook activates only for an exact generated target because it
+  uses a private C++ ABI. Runtime model recognition alone is insufficient.
 
 ## Persistence
 
@@ -52,12 +55,9 @@ BokOPDS-owned partial files. A successful download appends its path to
 `library-refresh.pending`; the hook consumes that marker only after the runtime
 lock disappears.
 
-## Local package pipeline
+## Package build
 
 `assemble-reader-shell-device.sh` verifies and overlays the pinned runtime.
-`build-release.sh` runs the emulator suite, builds the allowlisted native hook,
-packages the runtime, verifies the complete archive, emits the BokOPDS and
-NickelHook source plus pinned upstream source archives, and produces SHA-256
-checksums. A reproducible package requires a clean commit and
-embeds its exact revision. The archive is rooted only at the application
+`build-release.sh` builds the hook and runtime package, verifies the archive,
+and writes SHA-256 checksums. The archive is rooted only at the application
 directory and the one NickelHook library path.

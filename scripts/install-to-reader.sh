@@ -16,8 +16,10 @@ version_file="${system_directory}/version"
 update_file="${system_directory}/KoboRoot.tgz"
 partial_update="${update_file}.bokopds-part"
 partial_created=false
+compatibility_file=$(mktemp /tmp/bokopds-compatibility.XXXXXX)
 
 cleanup() {
+    rm -f "${compatibility_file}"
     if [ "${partial_created}" = "true" ]; then
         rm -f "${partial_update}"
     fi
@@ -30,25 +32,15 @@ if [ ! -d "${reader_root}" ] || [ ! -d "${system_directory}" ] ||
     exit 1
 fi
 
+"${project_dir}/scripts/verify-package.sh" "${package}" "${reader_root}"
+tar -xOzf "${package}" ./mnt/onboard/.adds/bokopds/compatibility.json \
+    > "${compatibility_file}" || {
+        echo "package compatibility manifest could not be read" >&2
+        exit 1
+    }
+"${project_dir}/scripts/check-device-compatibility.py" \
+    "${compatibility_file}" "${version_file}"
 firmware=$(awk -F, 'NR == 1 { print $3 }' "${version_file}")
-if ! printf '%s\n' "${firmware}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-    echo "could not determine firmware version; installation was not staged" >&2
-    exit 1
-fi
-if [ "${firmware}" != "4.38.23697" ]; then
-    echo "firmware ${firmware} is not in the tested compatibility list (4.38.23697)" >&2
-    exit 1
-fi
-hardware_id=$(awk -F, 'NR == 1 {
-    count = split($NF, identifier_parts, "-")
-    value = identifier_parts[count]
-    sub(/^0+/, "", value)
-    print value
-}' "${version_file}")
-if [ "${hardware_id}" != "389" ]; then
-    echo "this package is currently restricted to the tested hardware family (ID 389)" >&2
-    exit 1
-fi
 
 if [ -e "${update_file}" ] || [ -e "${partial_update}" ]; then
     echo "reader storage already contains a pending system update; nothing was changed" >&2
@@ -58,8 +50,6 @@ if [ -e "${reader_root}/.adds/bokopds/uninstall" ]; then
     echo "BokOPDS uninstall is pending; restart the reader before installing again" >&2
     exit 1
 fi
-
-"${project_dir}/scripts/verify-package.sh" "${package}" "${reader_root}"
 
 package_bytes=$(wc -c < "${package}")
 unpacked_bytes=$(gzip -cd "${package}" | wc -c)
@@ -107,6 +97,7 @@ fi
 mv "${partial_update}" "${update_file}"
 partial_created=false
 sync "${update_file}" 2>/dev/null || sync
+rm -f "${compatibility_file}"
 trap - EXIT INT TERM HUP
 
 echo "installation staged for firmware ${firmware}"

@@ -1,0 +1,55 @@
+name: Device compatibility report
+description: Politely report how BokOPDS behaves on an exact model and firmware.
+title: "[Compatibility] Model / firmware"
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping test BokOPDS. Please do not include your device serial number, catalog credentials, or other personal information.
+  - type: input
+    id: model
+    attributes:
+      label: Reader model
+      placeholder: Kobo Elipsa 2E
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware ID
+      description: The final numeric model ID, not the serial number.
+      placeholder: "389"
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+      placeholder: 4.38.23697
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: BokOPDS version and release SHA-256
+    validations:
+      required: true
+  - type: checkboxes
+    id: results
+    attributes:
+      label: Test results
+      options:
+        - label: Installation completed and exactly one BokOPDS menu item appeared.
+        - label: Launch, exit, relaunch, sleep, wake and frontlight worked.
+        - label: Wi-Fi, OPDS browsing, search and keyboard switching worked.
+        - label: A book downloaded and appeared in the stock library after exit.
+        - label: USB connection and safe return to the stock interface worked.
+        - label: Uninstall or recovery behavior was tested.
+  - type: textarea
+    id: details
+    attributes:
+      label: Details, failures, logs or photographs
+      description: Remove credentials, serial numbers and private catalog information first.
+    validations:
+      required: true

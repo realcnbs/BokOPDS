@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "devices": [
+    {
+      "id": "test-reader",
+      "name": "Test reader",
+      "targets": [
+        {
+          "id": "test-reader-389-fw4.38.23697",
+          "hardware_ids": ["389"],
+          "firmware": "4.38.23697",
+          "state": "untested",
+          "state_label": "Untested",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}
