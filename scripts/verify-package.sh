@@ -21,6 +21,11 @@ done
 tar -tvzf "${package}" | while IFS= read -r details; do
     case "$(printf '%s' "${details}" | cut -c 1)" in -|d) ;; *) echo "package contains a link or special file" >&2; exit 1;; esac
 done
+root_mode=$(tar -tvzf "${package}" | awk '$NF == "./" { print substr($1, 1, 10) }')
+if [ -n "${root_mode}" ] && [ "${root_mode}" != "drwxr-xr-x" ]; then
+    echo "package root entry must be drwxr-xr-x, found ${root_mode}" >&2
+    exit 1
+fi
 tar -xzf "${package}" -C "${stage}"
 
 app="${stage}/mnt/onboard/.adds/bokopds"
