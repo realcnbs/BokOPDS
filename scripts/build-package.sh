@@ -13,6 +13,10 @@ project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 source_revision=${BOKOPDS_SOURCE_REVISION:-}
 stage=$(mktemp -d /tmp/bokopds-package.XXXXXX)
 trap 'rm -rf "${stage}"' EXIT INT TERM HUP
+# mktemp creates the directory as 0700, and tar records it as the "./" entry.
+# Kobo extracts the archive over "/", so that mode would be applied to the
+# device's root directory and lock out every non-root process.
+chmod 755 "${stage}"
 
 if [ ! -d "${runtime}" ] || [ ! -f "${runtime}/reader.lua" ] ||
     [ ! -x "${runtime}/luajit" ]; then
