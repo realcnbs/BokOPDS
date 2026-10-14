@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.5.10 - 2026-10-14
+
+- Fixed release archives changing the reader's root directory permissions to
+  `0700`, which could prevent system services such as Wi-Fi from working.
+- Added package verification that rejects an unsafe root-directory mode.
+
 ## 0.5.9 - 2026-08-07
 
 - Added a public device and firmware compatibility table.
