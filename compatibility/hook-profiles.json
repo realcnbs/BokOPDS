@@ -22,6 +22,14 @@
       "firmware": "4.38.23697",
       "abi_profile": "nickel-4.38.23697-mainnav-v1",
       "enabled": true
+    },
+    {
+      "id": "elipsa2e-389-fw4.38.23852",
+      "device_id": "kobo-elipsa-2e",
+      "hardware_ids": ["389"],
+      "firmware": "4.38.23852",
+      "abi_profile": "nickel-4.38.23697-mainnav-v1",
+      "enabled": true
     }
   ]
 }

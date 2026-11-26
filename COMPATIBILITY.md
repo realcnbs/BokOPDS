@@ -30,6 +30,7 @@ for ordinary installation.
 | Kobo Libra 2 | — | Not available | — |
 | Kobo Clara 2E | — | Not available | — |
 | Kobo Elipsa 2E | `4.38.23697` | Device tested | 2026-08-07 / 0.5.8 |
+| ↳ same device | `4.38.23852` | Untested | — |
 | Kobo Libra Colour | — | Not available | — |
 | Kobo Clara BW | — | Not available | — |
 | Kobo Clara Colour | — | Not available | — |

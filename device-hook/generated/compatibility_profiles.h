@@ -36,9 +36,11 @@ static BokOPDSAbiProfile BokOPDSAbiProfiles[] = {
 };
 
 static const char* const BokOPDSTarget0HardwareIds[] = {"389"};
+static const char* const BokOPDSTarget1HardwareIds[] = {"389"};
 
 static BokOPDSCompatibilityTarget BokOPDSTargets[] = {
     {"elipsa2e-389-fw4.38.23697", "kobo-elipsa-2e", "4.38.23697", "device-tested", BokOPDSTarget0HardwareIds, 1, true, &BokOPDSAbiProfiles[0]},
+    {"elipsa2e-389-fw4.38.23852", "kobo-elipsa-2e", "4.38.23852", "untested", BokOPDSTarget1HardwareIds, 1, true, &BokOPDSAbiProfiles[0]},
 };
 static const std::size_t BokOPDSTargetCount = sizeof(BokOPDSTargets) / sizeof(BokOPDSTargets[0]);
 

@@ -288,6 +288,20 @@
           "report_count": 1,
           "state": "device-tested",
           "state_label": "Device tested"
+        },
+        {
+          "enabled": true,
+          "evidence_urls": [],
+          "firmware": "4.38.23852",
+          "hardware_ids": [
+            "389"
+          ],
+          "id": "elipsa2e-389-fw4.38.23852",
+          "last_tested_on": null,
+          "last_tested_version": null,
+          "report_count": 0,
+          "state": "untested",
+          "state_label": "Untested"
         }
       ]
     },

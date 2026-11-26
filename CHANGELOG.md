@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.5.11 - 2026-11-26
+
+- Enabled the BokOPDS home menu on Kobo Elipsa 2E firmware `4.38.23852`.
+  This firmware still needs a full device test.
+
 ## 0.5.10 - 2026-10-14
 
 - Fixed release archives changing the reader's root directory permissions to
